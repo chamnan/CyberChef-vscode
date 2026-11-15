@@ -1,0 +1,200 @@
+{
+  "name": "cyberchef-vscode",
+  "displayName": "CyberChef (Offline)",
+  "description": "The Cyber Swiss Army Knife inside VS Code. Runs the full GCHQ CyberChef web app completely offline, with editor integration.",
+  "version": "0.1.0",
+  "publisher": "chamnan",
+  "license": "Apache-2.0",
+  "icon": "media/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chamnan/CyberChef-vscode.git"
+  },
+  "bugs": {
+    "url": "https://github.com/chamnan/CyberChef-vscode/issues"
+  },
+  "homepage": "https://github.com/chamnan/CyberChef-vscode#readme",
+  "keywords": [
+    "cyberchef",
+    "base64",
+    "hex",
+    "encode",
+    "decode",
+    "encrypt",
+    "decrypt",
+    "hash",
+    "regex",
+    "offline"
+  ],
+  "categories": [
+    "Other",
+    "Formatters"
+  ],
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "extensionKind": [
+    "ui",
+    "workspace"
+  ],
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onWebviewPanel:cyberchef"
+  ],
+  "cyberchef": {
+    "version": "v11.5.0"
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "cyberchef.open",
+        "title": "Open",
+        "category": "CyberChef",
+        "icon": "$(beaker)"
+      },
+      {
+        "command": "cyberchef.sendSelection",
+        "title": "Send Selection to Input",
+        "category": "CyberChef"
+      },
+      {
+        "command": "cyberchef.sendFile",
+        "title": "Send File to Input",
+        "category": "CyberChef"
+      },
+      {
+        "command": "cyberchef.insertOutput",
+        "title": "Insert Output into Editor",
+        "category": "CyberChef",
+        "icon": "$(insert)"
+      },
+      {
+        "command": "cyberchef.openOutput",
+        "title": "Open Output in New Editor",
+        "category": "CyberChef",
+        "icon": "$(go-to-file)"
+      },
+      {
+        "command": "cyberchef.copyOutput",
+        "title": "Copy Output to Clipboard",
+        "category": "CyberChef",
+        "icon": "$(copy)"
+      },
+      {
+        "command": "cyberchef.loadRecipe",
+        "title": "Load Recipe...",
+        "category": "CyberChef"
+      },
+      {
+        "command": "cyberchef.reload",
+        "title": "Reload",
+        "category": "CyberChef",
+        "icon": "$(refresh)"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "cyberchef.sendSelection",
+          "group": "cyberchef@1"
+        },
+        {
+          "command": "cyberchef.insertOutput",
+          "when": "cyberchef.panelOpen && !editorReadonly",
+          "group": "cyberchef@2"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "cyberchef.sendFile",
+          "when": "!explorerResourceIsFolder",
+          "group": "cyberchef@1"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "cyberchef.copyOutput",
+          "when": "activeWebviewPanelId == 'cyberchef'",
+          "group": "navigation@1"
+        },
+        {
+          "command": "cyberchef.openOutput",
+          "when": "activeWebviewPanelId == 'cyberchef'",
+          "group": "navigation@2"
+        },
+        {
+          "command": "cyberchef.insertOutput",
+          "when": "activeWebviewPanelId == 'cyberchef'",
+          "group": "navigation@3"
+        },
+        {
+          "command": "cyberchef.reload",
+          "when": "activeWebviewPanelId == 'cyberchef'",
+          "group": "navigation@4"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "cyberchef.sendFile",
+          "when": "false"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "CyberChef",
+      "properties": {
+        "cyberchef.theme": {
+          "type": "string",
+          "default": "auto",
+          "enum": [
+            "auto",
+            "cyberchef",
+            "classic",
+            "dark",
+            "geocities",
+            "solarizedDark",
+            "solarizedLight"
+          ],
+          "enumDescriptions": [
+            "Follow the VS Code colour theme (light → Classic, dark → Dark).",
+            "Use whatever theme is selected in CyberChef's own Options.",
+            "CyberChef Classic theme.",
+            "CyberChef Dark theme.",
+            "CyberChef GeoCities theme.",
+            "CyberChef Solarized Dark theme.",
+            "CyberChef Solarized Light theme."
+          ],
+          "description": "Theme used for the CyberChef panel."
+        },
+        "cyberchef.server.port": {
+          "type": "integer",
+          "default": 47817,
+          "minimum": 0,
+          "maximum": 65535,
+          "markdownDescription": "Preferred port for the local loopback (`127.0.0.1`) server that hosts CyberChef. CyberChef keeps your options, favourites and saved recipes per port, so a stable port keeps them across sessions. If the port is busy a random free port is used. `0` always uses a random port."
+        },
+        "cyberchef.openBeside": {
+          "type": "boolean",
+          "default": false,
+          "description": "Open the CyberChef panel beside the active editor instead of in the active editor group."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "fetch-cyberchef": "node scripts/fetch-cyberchef.mjs",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "tsc -p ./ --noEmit",
+    "vscode:prepublish": "npm run fetch-cyberchef && npm run compile",
+    "package": "vsce package --no-dependencies",
+    "test": "npm run compile && node out/test/server.test.js"
+  },
+  "devDependencies": {
+    "@types/node": "^18.19.0",
+    "@types/vscode": "^1.75.0",
+    "@vscode/vsce": "^3.2.0",
+    "adm-zip": "^0.5.16",
+    "typescript": "^5.6.0"
+  }
+}

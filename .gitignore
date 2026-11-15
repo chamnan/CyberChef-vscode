@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Build output
+out/
+*.vsix
+
+# CyberChef build (downloaded by `npm run fetch-cyberchef`, bundled into the .vsix)
+cyberchef/
+
+# VS Code test runs
+.vscode-test/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/

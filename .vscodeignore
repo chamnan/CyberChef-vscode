@@ -1,0 +1,16 @@
+# Keep the .vsix lean: ship only out/*.js, media/, cyberchef/ and metadata.
+.github/**
+.vscode/**
+.vscode-test/**
+node_modules/**
+scripts/**
+src/**
+out/test/**
+out/**/*.map
+images/**
+**/*.ts
+**/tsconfig.json
+**/.DS_Store
+.gitignore
+package-lock.json
+cyberchef/.version
