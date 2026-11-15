@@ -46,3 +46,16 @@ jobs:
         with:
           files: cyberchef-vscode.vsix
           generate_release_notes: true
+
+      # Requires the repository secret VSCE_PAT (Azure DevOps PAT with Marketplace > Manage scope).
+      # Skipped with a notice when the secret is not configured.
+      - name: Publish to VS Code Marketplace
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          if [ -z "$VSCE_PAT" ]; then
+            echo "::notice::VSCE_PAT secret not set - skipping Marketplace publish"
+            exit 0
+          fi
+          npx vsce publish --no-dependencies --packagePath cyberchef-vscode.vsix
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}

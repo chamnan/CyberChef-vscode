@@ -2,7 +2,7 @@
   "name": "cyberchef-vscode",
   "displayName": "CyberChef (Offline)",
   "description": "The Cyber Swiss Army Knife inside VS Code. Runs the full GCHQ CyberChef web app completely offline, with editor integration.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "publisher": "chamnan",
   "license": "Apache-2.0",
   "icon": "media/icon.png",
@@ -27,9 +27,13 @@
     "offline"
   ],
   "categories": [
-    "Other",
-    "Formatters"
+    "Other"
   ],
+  "galleryBanner": {
+    "color": "#1e1e1e",
+    "theme": "dark"
+  },
+  "pricing": "Free",
   "engines": {
     "vscode": "^1.75.0"
   },
@@ -217,6 +221,7 @@
     "lint": "tsc -p ./ --noEmit",
     "vscode:prepublish": "npm run fetch-cyberchef && npm run compile",
     "package": "vsce package --no-dependencies",
+    "publish": "vsce publish --no-dependencies",
     "test": "npm run compile && node out/test/server.test.js"
   },
   "devDependencies": {

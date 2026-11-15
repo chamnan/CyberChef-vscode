@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1 — 2026-11-15
+
+- First VS Code Marketplace release. Marketplace listing metadata (category, banner).
+
 ## 0.2.0 — 2026-11-15
 
 - CyberChef icon in the **Activity Bar**: click it to open CyberChef. The side bar closes automatically so the icon works like a launcher; set `cyberchef.activityBar.keepSidebarOpen` to keep its quick-action view (Open, Send Selection, Send File, Load Recipe) open instead.

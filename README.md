@@ -6,6 +6,11 @@ This extension embeds the complete [GCHQ CyberChef](https://github.com/gchq/Cybe
 
 ![CyberChef running in the extension panel](images/screenshot.png)
 
+## Install
+
+- **VS Code Marketplace:** search for **"CyberChef (Offline)"** in the Extensions view, or run `code --install-extension chamnan.cyberchef-vscode`.
+- **Offline / air-gapped:** download `cyberchef-vscode.vsix` from [GitHub Releases](https://github.com/chamnan/CyberChef-vscode/releases), then run `code --install-extension cyberchef-vscode.vsix`.
+
 ## Features
 
 - **Identical CyberChef UI/UX.** Operations list, drag-and-drop recipe builder, Bake / Step / Auto Bake, Magic, multiple input/output tabs, file inputs, breakpoints, favourites, saved recipes and all five themes. It is the unmodified official release (currently **v11.5.0**, 500+ operations).
@@ -67,7 +72,7 @@ npm test                  # compiles and runs the unit tests
 
 - **Debug:** open the folder in VS Code and press `F5` (*Run Extension*).
 - **Package:** `npm run package` produces `cyberchef-vscode-<version>.vsix`.
-- **Install the VSIX:** `code --install-extension cyberchef-vscode-0.1.0.vsix`, or *Extensions view → … → Install from VSIX…*. Once installed, no internet connection is ever needed.
+- **Install the VSIX:** `code --install-extension cyberchef-vscode-<version>.vsix`, or *Extensions view → … → Install from VSIX…*. Once installed, no internet connection is ever needed.
 
 ### Updating CyberChef
 
@@ -81,7 +86,12 @@ Change it to another [CyberChef release tag](https://github.com/gchq/CyberChef/r
 
 ### Releases
 
-GitHub Actions ([`.github/workflows/build.yml`](.github/workflows/build.yml)) builds and tests every push and uploads the `.vsix` as an artifact. Pushing a tag like `v0.1.0` also publishes a GitHub Release with the `.vsix` attached.
+GitHub Actions ([`.github/workflows/build.yml`](.github/workflows/build.yml)) builds and tests every push and uploads the `.vsix` as an artifact. Pushing a tag like `v0.2.1` also:
+
+- publishes a GitHub Release with the `.vsix` attached;
+- publishes to the VS Code Marketplace if the repository secret `VSCE_PAT` is set (an Azure DevOps Personal Access Token with **Marketplace → Manage** scope for publisher `chamnan`).
+
+To release: bump `version` in `package.json`, update `CHANGELOG.md`, commit, then `git tag vX.Y.Z && git push origin vX.Y.Z`.
 
 ## Project layout
 
