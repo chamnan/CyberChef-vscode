@@ -10,6 +10,7 @@ This extension embeds the complete [GCHQ CyberChef](https://github.com/gchq/Cybe
 
 - **Identical CyberChef UI/UX.** Operations list, drag-and-drop recipe builder, Bake / Step / Auto Bake, Magic, multiple input/output tabs, file inputs, breakpoints, favourites, saved recipes and all five themes. It is the unmodified official release (currently **v11.5.0**, 500+ operations).
 - **100% offline.** All operations, lazily loaded modules, web workers, OCR language data and fonts are bundled.
+- **One-click launcher.** A CyberChef icon in the Activity Bar opens the full CyberChef panel. You can right-click it to hide it or drag it to reorder.
 - **Editor integration**
   - **CyberChef: Send Selection to Input** (editor right-click menu). Sends the selection, or the whole file if nothing is selected, to the CyberChef input.
   - **CyberChef: Send File to Input** (Explorer right-click menu). Loads any file (binary-safe) as a CyberChef input tab.
@@ -24,7 +25,7 @@ This extension embeds the complete [GCHQ CyberChef](https://github.com/gchq/Cybe
 
 ## Usage
 
-1. Open the Command Palette (`Ctrl/Cmd+Shift+P`) and run **CyberChef: Open**.
+1. Click the **CyberChef chef-hat icon** in the Activity Bar (left edge of the window), or run **CyberChef: Open** from the Command Palette (`Ctrl/Cmd+Shift+P`).
 2. Build a recipe exactly as on the website: drag operations from the left into the Recipe column.
 3. Type or paste into **Input**, or right-click selected text in any editor and choose **CyberChef: Send Selection to Input**.
 4. Use the panel's title-bar buttons to copy the output, open it in a new editor, or insert it at the cursor or selection of the last active editor.
@@ -35,6 +36,7 @@ This extension embeds the complete [GCHQ CyberChef](https://github.com/gchq/Cybe
 | --- | --- | --- |
 | `cyberchef.theme` | `auto` | `auto` follows VS Code. `cyberchef` keeps the theme selected in CyberChef's Options. Or force `classic`, `dark`, `geocities`, `solarizedDark` or `solarizedLight`. |
 | `cyberchef.server.port` | `47817` | Preferred port of the local loopback server. CyberChef stores options, favourites and saved recipes per origin, so a stable port keeps them across sessions. Falls back to a random port if busy; `0` = always random. |
+| `cyberchef.activityBar.keepSidebarOpen` | `false` | After clicking the Activity Bar icon, keep the CyberChef side bar view (quick actions) open instead of closing the side bar. |
 | `cyberchef.openBeside` | `false` | Open the panel beside the active editor. |
 
 ## How it works

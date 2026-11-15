@@ -2,7 +2,7 @@
   "name": "cyberchef-vscode",
   "displayName": "CyberChef (Offline)",
   "description": "The Cyber Swiss Army Knife inside VS Code. Runs the full GCHQ CyberChef web app completely offline, with editor integration.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "publisher": "chamnan",
   "license": "Apache-2.0",
   "icon": "media/icon.png",
@@ -45,6 +45,30 @@
     "version": "v11.5.0"
   },
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "cyberchef-sidebar",
+          "title": "CyberChef",
+          "icon": "media/activitybar.svg"
+        }
+      ]
+    },
+    "views": {
+      "cyberchef-sidebar": [
+        {
+          "id": "cyberchef.launcher",
+          "name": "CyberChef",
+          "icon": "media/activitybar.svg"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "cyberchef.launcher",
+        "contents": "Run CyberChef offline inside VS Code.\n[Open CyberChef](command:cyberchef.open)\n[Send Selection to Input](command:cyberchef.sendSelection)\n[Send File to Input](command:cyberchef.sendFile)\n[Load Recipe...](command:cyberchef.loadRecipe)\nTip: set `cyberchef.activityBar.keepSidebarOpen` to keep this view open after clicking the CyberChef icon."
+      }
+    ],
     "commands": [
       {
         "command": "cyberchef.open",
@@ -172,6 +196,11 @@
           "minimum": 0,
           "maximum": 65535,
           "markdownDescription": "Preferred port for the local loopback (`127.0.0.1`) server that hosts CyberChef. CyberChef keeps your options, favourites and saved recipes per port, so a stable port keeps them across sessions. If the port is busy a random free port is used. `0` always uses a random port."
+        },
+        "cyberchef.activityBar.keepSidebarOpen": {
+          "type": "boolean",
+          "default": false,
+          "description": "When the CyberChef Activity Bar icon is clicked, open CyberChef and keep the CyberChef side bar view (quick actions) visible instead of closing the side bar."
         },
         "cyberchef.openBeside": {
           "type": "boolean",

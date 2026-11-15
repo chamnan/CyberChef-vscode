@@ -54,6 +54,29 @@ export function activate(context: vscode.ExtensionContext): CyberChefApi {
 
     register("cyberchef.open", () => open());
 
+    // Activity Bar icon: clicking it reveals this (empty) view, which acts as a launcher
+    // for the full-size CyberChef editor panel. By default the side bar is then closed so
+    // the icon behaves like a button; the view itself shows quick-action links.
+    const launcher = vscode.window.createTreeView("cyberchef.launcher", {
+        treeDataProvider: { getChildren: () => [], getTreeItem: (item: vscode.TreeItem) => item },
+    });
+    const launch = async () => {
+        try {
+            await open();
+            const keep = vscode.workspace.getConfiguration("cyberchef").get<boolean>("activityBar.keepSidebarOpen", false);
+            if (!keep) await vscode.commands.executeCommand("workbench.action.closeSidebar");
+        } catch (err) {
+            void vscode.window.showErrorMessage(`CyberChef: ${err instanceof Error ? err.message : String(err)}`);
+        }
+    };
+    context.subscriptions.push(
+        launcher,
+        launcher.onDidChangeVisibility((e) => {
+            if (e.visible) void launch();
+        })
+    );
+    if (launcher.visible) void launch();
+
     register("cyberchef.sendSelection", async () => {
         const editor = vscode.window.activeTextEditor ?? lastEditor;
         if (!editor) {
