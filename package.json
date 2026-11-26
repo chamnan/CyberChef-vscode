@@ -2,7 +2,7 @@
   "name": "cyberchef-vscode",
   "displayName": "CyberChef (Offline)",
   "description": "The Cyber Swiss Army Knife inside VS Code. Runs the full GCHQ CyberChef web app completely offline, with editor integration.",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "publisher": "chamnan",
   "license": "Apache-2.0",
   "icon": "media/icon.png",

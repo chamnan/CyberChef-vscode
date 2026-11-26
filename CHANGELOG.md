@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.2 — 2026-11-26
+
+- Fix: pasting into CyberChef's Input did not work in some VS Code setups. VS Code handles copy/paste for webviews itself and never reached the nested CyberChef page. Copy, cut and paste now go through VS Code's clipboard. This covers keyboard shortcuts, Edit menu, Command Palette and CyberChef's "Copy raw output" button, in the Input/Output editors, the operations search box and recipe argument fields.
+- Select all / undo / redo also work in CyberChef's plain text fields (search box, recipe arguments).
+
 ## 0.2.1 — 2026-11-15
 
 - First VS Code Marketplace release. Marketplace listing metadata (category, banner).

@@ -126,6 +126,160 @@
     };
 
     // ------------------------------------------------------------------------------
+    // Clipboard. VS Code intercepts copy/paste/cut for webviews and replays them on the
+    // webview's top document, which never reaches this nested iframe; whether the
+    // browser's native path still works varies by OS, menu style and permissions. So
+    // the clipboard goes through VS Code's own clipboard API (vscode.env.clipboard).
+    // CodeMirror editors (Input/Output) get synthetic clipboard events so CyberChef's
+    // own handlers run (large pastes, control-char pictures, line-wise copy, read-only).
+    // ------------------------------------------------------------------------------
+    var isMac = /Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent || "");
+    var clipboardWaiters = {};
+    var clipboardSeq = 1;
+    var lastFocused = null;
+    var lastGesture = 0;
+
+    document.addEventListener("focusin", function (e) { lastFocused = e.target; }, true);
+    ["keydown", "mousedown", "pointerdown"].forEach(function (type) {
+        document.addEventListener(type, function (e) { if (e.isTrusted) lastGesture = Date.now(); }, true);
+    });
+
+    function editorViews() {
+        var views = [];
+        try {
+            var m = app().manager;
+            if (m.input.inputEditorView) views.push(m.input.inputEditorView);
+            if (m.output.outputEditorView) views.push(m.output.outputEditorView);
+        } catch (_) { /* not ready */ }
+        return views;
+    }
+    function viewFor(el) {
+        if (!el) return null;
+        var views = editorViews();
+        for (var i = 0; i < views.length; i++) if (views[i].dom.contains(el)) return views[i];
+        return null;
+    }
+    function isTextField(el) {
+        return !!el && (el.tagName === "TEXTAREA" ||
+            (el.tagName === "INPUT" && /^(text|search|url|tel|password|email|number|)$/i.test(el.getAttribute("type") || "")));
+    }
+    function clipboardTarget() {
+        var el = document.activeElement;
+        if (!el || el === document.body || el === document.documentElement) el = lastFocused;
+        if (!el || !document.contains(el)) {
+            // Nothing focused yet: default to CyberChef's Input editor.
+            try { el = app().manager.input.inputEditorView.contentDOM; } catch (_) { el = null; }
+        }
+        return el;
+    }
+
+    function requestClipboardText() {
+        return new Promise(function (resolve) {
+            var id = clipboardSeq++;
+            clipboardWaiters[id] = resolve;
+            post({ type: "clipboardRead", requestId: id });
+            setTimeout(function () {
+                if (clipboardWaiters[id]) { delete clipboardWaiters[id]; resolve(null); }
+            }, 5000);
+        });
+    }
+    function writeClipboardText(text) {
+        post({ type: "clipboardWrite", text: String(text) });
+    }
+
+    /** Returns the selected text in el (performing a cut if asked), or "" if none. */
+    function takeSelection(el, cut) {
+        var view = viewFor(el);
+        if (view) {
+            var dt = new DataTransfer();
+            view.contentDOM.dispatchEvent(new ClipboardEvent(cut ? "cut" : "copy", { clipboardData: dt, bubbles: true, cancelable: true }));
+            return dt.getData("text/plain");
+        }
+        if (isTextField(el)) {
+            var start = null, end = null;
+            try { start = el.selectionStart; end = el.selectionEnd; } catch (_) { /* e.g. number inputs */ }
+            if (start === null || start === end) return String(window.getSelection() || "");
+            var text = el.value.slice(start, end);
+            if (cut && !el.readOnly && !el.disabled) {
+                el.focus();
+                if (!document.execCommand("delete")) {
+                    el.setRangeText("", start, end, "end");
+                    el.dispatchEvent(new Event("input", { bubbles: true }));
+                }
+            }
+            return text;
+        }
+        return String(window.getSelection() || "");
+    }
+
+    function insertText(el, text) {
+        if (!text) return;
+        var view = viewFor(el);
+        if (view) {
+            var dt = new DataTransfer();
+            dt.setData("text/plain", text);
+            view.focus();
+            view.contentDOM.dispatchEvent(new ClipboardEvent("paste", { clipboardData: dt, bubbles: true, cancelable: true }));
+            return;
+        }
+        if (isTextField(el) || (el && el.isContentEditable)) {
+            if (el.readOnly || el.disabled) return;
+            el.focus();
+            if (!document.execCommand("insertText", false, text) && isTextField(el)) {
+                var s = el.selectionStart, e = el.selectionEnd;
+                el.setRangeText(text, s === null ? el.value.length : s, e === null ? el.value.length : e, "end");
+                el.dispatchEvent(new Event("input", { bubbles: true }));
+            }
+        }
+    }
+
+    document.addEventListener("keydown", function (e) {
+        var mod = isMac ? e.metaKey && !e.ctrlKey : e.ctrlKey && !e.metaKey;
+        if (!mod || e.altKey) return;
+        var key = (e.key || "").toLowerCase();
+        var el = clipboardTarget();
+
+        if (key === "v") {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            requestClipboardText().then(function (text) { insertText(el, text); });
+        } else if ((key === "c" || key === "x") && !e.shiftKey) {
+            var text = takeSelection(el, key === "x");
+            if (!text) return;
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            writeClipboardText(text);
+        } else if (isTextField(el) && !viewFor(el)) {
+            // Plain inputs (search box, recipe arguments): make select-all / undo / redo
+            // independent of VS Code's Edit menu too. CodeMirror handles its own.
+            if (key === "a" && !e.shiftKey) { e.preventDefault(); el.select(); }
+            else if (key === "z" && !e.shiftKey) { e.preventDefault(); document.execCommand("undo"); }
+            else if ((key === "z" && e.shiftKey) || (key === "y" && !isMac)) { e.preventDefault(); document.execCommand("redo"); }
+        }
+    }, true);
+
+    // CyberChef's "Copy raw output to clipboard" button uses navigator.clipboard, which may
+    // be denied inside nested webview frames. Route it through VS Code as well. Reading is
+    // only allowed right after a real user key press or click, like a browser would require.
+    try {
+        var clip = {
+            writeText: function (t) { writeClipboardText(t); return Promise.resolve(); },
+            readText: function () {
+                if (Date.now() - lastGesture > 1500) {
+                    return Promise.reject(new DOMException("Clipboard read requires a user gesture.", "NotAllowedError"));
+                }
+                return requestClipboardText().then(function (t) { return t === null ? "" : t; });
+            },
+        };
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText = clip.writeText;
+            navigator.clipboard.readText = clip.readText;
+        } else {
+            Object.defineProperty(navigator, "clipboard", { value: clip, configurable: true });
+        }
+    } catch (_) { /* keep the browser's implementation */ }
+
+    // ------------------------------------------------------------------------------
     // Commands from VS Code
     // ------------------------------------------------------------------------------
     function applyTheme(theme) {
@@ -168,6 +322,22 @@
             case "bake":
                 a.manager.controls.bakeClick();
                 break;
+            case "clipboardText": {
+                var waiter = clipboardWaiters[msg.requestId];
+                if (waiter) {
+                    delete clipboardWaiters[msg.requestId];
+                    waiter(typeof msg.text === "string" ? msg.text : null);
+                }
+                break;
+            }
+            case "pasteText": // Edit > Paste / Command Palette, relayed by the panel
+                insertText(clipboardTarget(), String(msg.text || ""));
+                break;
+            case "copyRequest": { // Edit > Copy / Cut, relayed by the panel
+                var copied = takeSelection(clipboardTarget(), !!msg.cut);
+                if (copied) writeClipboardText(copied);
+                break;
+            }
             case "getOutput":
                 getOutput().then(
                     function (value) {

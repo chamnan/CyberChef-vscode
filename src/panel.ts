@@ -22,6 +22,8 @@ type FromCyberChef =
     | { type: "saveFile"; name: string; data: unknown }
     | { type: "openExternal"; url: string }
     | { type: "state"; hash: string }
+    | { type: "clipboardRead"; requestId: number }
+    | { type: "clipboardWrite"; text: string }
     | { type: "error"; message: string };
 
 interface PanelState {
@@ -189,6 +191,19 @@ export class CyberChefPanel {
             case "saveFile":
                 await this.saveFile(msg.name, toBytes(msg.data));
                 break;
+            case "clipboardRead": {
+                let text: string | null = null;
+                try {
+                    text = await vscode.env.clipboard.readText();
+                } catch {
+                    text = null;
+                }
+                void this.panel.webview.postMessage({ type: "clipboardText", requestId: msg.requestId, text, [TAG]: true });
+                break;
+            }
+            case "clipboardWrite":
+                if (typeof msg.text === "string") await vscode.env.clipboard.writeText(msg.text);
+                break;
             case "openExternal":
                 if (/^(https?|mailto):/i.test(msg.url)) {
                     void vscode.env.openExternal(vscode.Uri.parse(msg.url, true));
@@ -285,6 +300,17 @@ export class CyberChefPanel {
     }
     frame.contentWindow.postMessage(msg, ORIGIN, transfer);
   });
+
+  // VS Code runs Edit > Copy/Cut/Paste (menu, Command Palette, some key paths) on this
+  // document, not inside the CyberChef iframe. Relay them to the bridge.
+  const toFrame = (msg) => frame.contentWindow.postMessage(Object.assign({ [TAG]: true }, msg), ORIGIN);
+  document.addEventListener("paste", (e) => {
+    const text = e.clipboardData ? e.clipboardData.getData("text/plain") : "";
+    e.preventDefault();
+    if (text) toFrame({ type: "pasteText", text });
+  });
+  document.addEventListener("copy", (e) => { e.preventDefault(); toFrame({ type: "copyRequest", cut: false }); });
+  document.addEventListener("cut", (e) => { e.preventDefault(); toFrame({ type: "copyRequest", cut: true }); });
 
   frame.addEventListener("load", () => { try { frame.focus(); } catch (_) {} });
 })();
